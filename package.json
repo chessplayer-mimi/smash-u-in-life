@@ -1,0 +1,20 @@
+{
+  "name": "smash-u-in-life",
+  "version": "1.0.0",
+  "description": "破防小遊戲",
+  "main": "index.html",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "start": "vite preview"
+  },
+  "dependencies": {
+    "firebase": "^9.6.0"
+  },
+  "devDependencies": {
+    "dotenv": "^16.0.3",
+    "vite": "^4.5.9"
+  },
+  "author": "mimi",
+  "license": "MIT"
+}
