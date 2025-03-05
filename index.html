@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>你破防了嗎生活版</title>
+  <title>你破防了嗎</title>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -72,7 +72,7 @@
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
   <script>
     var firebaseConfig = {
- apiKey: "AIzaSyDFwkjeLA8VjI1MFflpECFNz-hV6S8ZyPw",
+      apiKey: "AIzaSyDFwkjeLA8VjI1MFflpECFNz-hV6S8ZyPw",
   authDomain: "smash-u-in-life.firebaseapp.com",
   databaseURL: "https://smash-u-in-life-default-rtdb.firebaseio.com",
   projectId: "smash-u-in-life",
@@ -101,7 +101,7 @@
 
   <script>
     const questions = [
-    
+        
    "工作找沒找到？還是繼續啃老？",
 "工資有夠少？這點錢連外送都不敢點吧？",
 "房子買了沒？還是在幫房東還貸？",
@@ -162,6 +162,7 @@
 "喝水夠不夠？還是每天靠咖啡續命？",
 "這輩子有沒有後悔的事？還是來不及後悔？",
 "你還好嗎？還是只能說「還行」？"
+ 
     ];
     let currentQuestionIndex = 0;
     let score = 0;
@@ -211,6 +212,10 @@
         commentInput.value = "";
       }
     }
+    window.onload = loadQuestion;
+  </script>
+</body>
+</html>
     window.onload = loadQuestion;
   </script>
 </body>
