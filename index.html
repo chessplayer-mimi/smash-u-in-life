@@ -58,7 +58,7 @@
     <div class="comments">
       <h3>留言區</h3>
       <div id="commentList"></div>
-      <input type="text" id="commentInput" placeholder="輸入留言...">
+      <input type="text" id="commentInput" placeholder="輸入留言..." onkeypress="handleEnter(event)">
       <button onclick="addComment()">送出</button>
     </div>
     <p class="score">破防次數: <span id="score">0</span></p>
@@ -83,7 +83,7 @@
     const database = getDatabase(app);
 
     const questions = [
-     "工作找沒找到？還是繼續啃老？",
+    "工作找沒找到？還是繼續啃老？",
 "工資有夠少？這點錢連外送都不敢點吧？",
 "房子買了沒？還是在幫房東還貸？",
 "房貸繳了沒？還是下個月準備被銀行追殺？",
@@ -181,8 +181,7 @@
     function handleYes() {
       score++;
       document.getElementById("score").innerText = score;
-      const voteRef = ref(database, 'votes/' + currentQuestionIndex);
-      runTransaction(voteRef, count => (count || 0) + 1);
+      runTransaction(ref(database, 'votes/' + currentQuestionIndex), count => (count || 0) + 1);
       nextQuestion();
     }
 
@@ -206,10 +205,13 @@
       }
     }
 
+    function handleEnter(event) {
+      if (event.key === "Enter") {
+        addComment();
+      }
+    }
+
     window.onload = loadQuestion;
-  </script>
-</body>
-</html>
   </script>
 </body>
 </html>
