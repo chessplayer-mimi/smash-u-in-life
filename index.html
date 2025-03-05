@@ -218,6 +218,221 @@
   </script>
 </body>
 </html>
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>你破防了嗎生活版</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      background-color: #f4f4f4;
+      margin: 0;
+      padding: 20px;
+    }
+    .container {
+      max-width: 600px;
+      background: white;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+      margin: auto;
+    }
+    .question {
+      font-size: 20px;
+      margin-bottom: 20px;
+      min-height: 50px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .btn {
+      padding: 10px 20px;
+      font-size: 18px;
+      margin: 10px;
+      cursor: pointer;
+      border: none;
+      border-radius: 5px;
+    }
+    .btn-yes {
+      background-color: red;
+      color: white;
+    }
+    .btn-no {
+      background-color: green;
+      color: white;
+    }
+    .vote-count, .score {
+      font-size: 16px;
+      margin-top: 10px;
+    }
+    .comments {
+      margin-top: 20px;
+      text-align: left;
+    }
+    .comment {
+      background: #eee;
+      padding: 10px;
+      margin: 5px 0;
+      border-radius: 5px;
+    }
+    input {
+      width: calc(100% - 22px);
+      padding: 8px;
+      margin-top: 10px;
+    }
+    button {
+      margin-top: 5px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="question" id="question">載入中...</div>
+    <button class="btn btn-yes" onclick="handleYes()">是</button>
+    <button class="btn btn-no" onclick="nextQuestion()">否</button>
+    <p class="vote-count">按「是」的人數: <span id="yesCount">0</span></p>
+    <div class="comments">
+      <h3>留言區</h3>
+      <div id="commentList"></div>
+      <input type="text" id="commentInput" placeholder="輸入留言...">
+      <button onclick="addComment()">送出</button>
+    </div>
+    <p class="score">破防次數: <span id="score">0</span></p>
+  </div>
+
+  <!-- Firebase SDK -->
+  <script type="module">
+    import { firebaseConfig } from './config.js';
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.0/firebase-app.js";
+    import { getDatabase, ref, onValue, set, push, runTransaction } from "https://www.gstatic.com/firebasejs/9.6.0/firebase-database.js";
+
+    const app = initializeApp(firebaseConfig);
+    const database = getDatabase(app);
+
+    const questions = [
+      "工作找沒找到？還是繼續啃老？",
+"工資有夠少？這點錢連外送都不敢點吧？",
+"房子買了沒？還是在幫房東還貸？",
+"房貸繳了沒？還是下個月準備被銀行追殺？",
+"車子買了沒？還是每天擠公車擠到懷疑人生？",
+"水電費繳了沒？該不會等房東提醒吧？",
+"卡是不是爆了？還是乾脆申請新卡繼續刷？",
+"生小孩了沒？還是連自己都養不起？",
+"有沒有男女朋友？還是連人類互動都快忘了？",
+"找不到的話找同性吧？連同性都找不到？！你是什麼生物？",
+"結婚了沒？還是繼續當人家伴郎伴娘？",
+"離婚了沒？還是繼續被壓榨？",
+"存款夠不夠？還是月底吃土比較實際？",
+"假日有沒有地方去？還是繼續窩在家發霉？",
+"朋友是不是越來越少？還是大家都默契封鎖你了？",
+"出門有沒有人約？還是連詐騙都懶得騙你？",
+"加班加到什麼時候？還是根本不敢下班？",
+"健身了沒？還是肥宅模式開啟到無限？",
+"減肥成功了沒？還是只會喊口號？",
+"旅遊計畫了沒？還是連護照長什麼樣都不知道？",
+"父母身體顧到了沒？還是等他們催才想到？",
+"過年有沒有紅包拿？還是只能默默發？",
+"還在被長輩問結婚嗎？還是長輩已經放棄你了？",
+"有沒有升遷？還是還在被學弟學妹踩？",
+"買房還是租房？還是乾脆搬回家？",
+"房租是不是又漲了？要不要考慮睡公園？",
+"信用評分好嗎？還是銀行連貸款資格都懶得審？",
+"網購是不是刷爆了？還是月底開始吃泡麵？",
+"有沒有好好吃飯？還是繼續外送當月光族？",
+"睡眠充足嗎？還是每天睡前想未來想得失眠？",
+"運動習慣養成了沒？還是連一層樓都懶得爬？",
+"皮膚保養做了沒？還是繼續當油膩生物？",
+"學歷有沒有用上？還是高學歷低薪水？",
+"副業開了沒？還是連正職都混不下去？",
+"追的股票漲了沒？還是一路抄底抄到地心？",
+"買的基金有沒有賺？還是理財理到破產？",
+"今年有沒有出國？還是連機票錢都掏不出來？",
+"過生日有人記得嗎？還是只能自己發文安慰自己？",
+"朋友的喜帖收到幾張了？還是根本沒朋友結婚？",
+"喜宴紅包包了幾次了？存款是不是快見底了？",
+"別人升職加薪你還在原地？還是準備被炒？",
+"工作到底穩不穩？還是每天都在等裁員名單？",
+"退休計畫有了嗎？還是打算工作到80歲？",
+"保險買了沒？還是生病只能祈禱？",
+"有沒有人請你吃飯？還是只能自掏腰包？",
+"生活過得開心嗎？還是每天都在自我催眠？",
+"今天有沒有笑過？還是整天負能量爆棚？",
+"假日還在加班嗎？還是已經忘了休假是什麼？",
+"假日有沒有躺一天什麼都沒做？還是該做的事一堆？",
+"家裡乾淨嗎？還是堆得像倉庫？",
+"連假去哪裡玩了？還是根本沒假？",
+"現在過得比以前好嗎？還是越來越慘？",
+"喜歡的人有沒有回應？還是連告白機會都沒有？",
+"學的新技能用上了嗎？還是學了個寂寞？",
+"夢想還在堅持嗎？還是早就放棄了？",
+"長輩有沒有在催婚？還是已經懶得催？",
+"有人約你看電影嗎？還是電影只能自己看？",
+"喝水夠不夠？還是每天靠咖啡續命？",
+"這輩子有沒有後悔的事？還是來不及後悔？",
+"你還好嗎？還是只能說「還行」？"
+    ];
+
+    let currentQuestionIndex = 0;
+    let score = 0;
+
+    function listenVotes() {
+      const voteRef = ref(database, 'votes/' + currentQuestionIndex);
+      onValue(voteRef, snapshot => {
+        document.getElementById("yesCount").innerText = snapshot.val() || 0;
+      });
+    }
+
+    function listenComments() {
+      const commentRef = ref(database, 'comments/' + currentQuestionIndex);
+      onValue(commentRef, snapshot => {
+        const commentList = document.getElementById("commentList");
+        commentList.innerHTML = "";
+        snapshot.forEach(childSnapshot => {
+          let commentDiv = document.createElement("div");
+          commentDiv.className = "comment";
+          commentDiv.innerText = childSnapshot.val();
+          commentList.appendChild(commentDiv);
+        });
+      });
+    }
+
+    function loadQuestion() {
+      document.getElementById("question").innerText = questions[currentQuestionIndex];
+      listenVotes();
+      listenComments();
+    }
+
+    function handleYes() {
+      score++;
+      document.getElementById("score").innerText = score;
+      const voteRef = ref(database, 'votes/' + currentQuestionIndex);
+      runTransaction(voteRef, count => (count || 0) + 1);
+      nextQuestion();
+    }
+
+    function nextQuestion() {
+      currentQuestionIndex++;
+      if (currentQuestionIndex >= questions.length) {
+        alert("遊戲結束！你的破防次數: " + score);
+        currentQuestionIndex = 0;
+        score = 0;
+        document.getElementById("score").innerText = score;
+      }
+      loadQuestion();
+    }
+
+    function addComment() {
+      let commentInput = document.getElementById("commentInput");
+      let commentText = commentInput.value.trim();
+      if (commentText) {
+        const commentRef = ref(database, 'comments/' + currentQuestionIndex);
+        push(commentRef, commentText);
+        commentInput.value = "";
+      }
+    }
 
     window.onload = loadQuestion;
   </script>
