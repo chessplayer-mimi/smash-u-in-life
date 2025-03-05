@@ -67,22 +67,6 @@
       margin-top: 5px;
     }
   </style>
-  <!-- Firebase SDK -->
-  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
-  <script>
-    var firebaseConfig = {
- apiKey: "AIzaSyDFwkjeLA8VjI1MFflpECFNz-hV6S8ZyPw",
-  authDomain: "smash-u-in-life.firebaseapp.com",
-  databaseURL: "https://smash-u-in-life-default-rtdb.firebaseio.com",
-  projectId: "smash-u-in-life",
-  storageBucket: "smash-u-in-life.firebasestorage.app",
-  messagingSenderId: "601839091807",
-  appId: "1:601839091807:web:e735bb69cfa15ba3369bea",
-    };
-    firebase.initializeApp(firebaseConfig);
-    var database = firebase.database();
-  </script>
 </head>
 <body>
   <div class="container">
@@ -99,10 +83,17 @@
     <p class="score">破防次數: <span id="score">0</span></p>
   </div>
 
-  <script>
+  <!-- Firebase SDK -->
+  <script type="module">
+    import { firebaseConfig } from './config.js';
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.0/firebase-app.js";
+    import { getDatabase, ref, onValue, set, push, runTransaction } from "https://www.gstatic.com/firebasejs/9.6.0/firebase-database.js";
+
+    const app = initializeApp(firebaseConfig);
+    const database = getDatabase(app);
+
     const questions = [
-    
-   "工作找沒找到？還是繼續啃老？",
+      "工作找沒找到？還是繼續啃老？",
 "工資有夠少？這點錢連外送都不敢點吧？",
 "房子買了沒？還是在幫房東還貸？",
 "房貸繳了沒？還是下個月準備被銀行追殺？",
@@ -163,15 +154,20 @@
 "這輩子有沒有後悔的事？還是來不及後悔？",
 "你還好嗎？還是只能說「還行」？"
     ];
+
     let currentQuestionIndex = 0;
     let score = 0;
+
     function listenVotes() {
-      database.ref('votes/' + currentQuestionIndex).on('value', snapshot => {
+      const voteRef = ref(database, 'votes/' + currentQuestionIndex);
+      onValue(voteRef, snapshot => {
         document.getElementById("yesCount").innerText = snapshot.val() || 0;
       });
     }
+
     function listenComments() {
-      database.ref('comments/' + currentQuestionIndex).on('value', snapshot => {
+      const commentRef = ref(database, 'comments/' + currentQuestionIndex);
+      onValue(commentRef, snapshot => {
         const commentList = document.getElementById("commentList");
         commentList.innerHTML = "";
         snapshot.forEach(childSnapshot => {
@@ -182,17 +178,21 @@
         });
       });
     }
+
     function loadQuestion() {
       document.getElementById("question").innerText = questions[currentQuestionIndex];
       listenVotes();
       listenComments();
     }
+
     function handleYes() {
       score++;
       document.getElementById("score").innerText = score;
-      database.ref('votes/' + currentQuestionIndex).transaction(count => (count || 0) + 1);
+      const voteRef = ref(database, 'votes/' + currentQuestionIndex);
+      runTransaction(voteRef, count => (count || 0) + 1);
       nextQuestion();
     }
+
     function nextQuestion() {
       currentQuestionIndex++;
       if (currentQuestionIndex >= questions.length) {
@@ -203,14 +203,22 @@
       }
       loadQuestion();
     }
+
     function addComment() {
       let commentInput = document.getElementById("commentInput");
       let commentText = commentInput.value.trim();
       if (commentText) {
-        database.ref('comments/' + currentQuestionIndex).push(commentText);
+        const commentRef = ref(database, 'comments/' + currentQuestionIndex);
+        push(commentRef, commentText);
         commentInput.value = "";
       }
     }
+
+    window.onload = loadQuestion;
+  </script>
+</body>
+</html>
+
     window.onload = loadQuestion;
   </script>
 </body>
