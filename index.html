@@ -171,11 +171,19 @@
 
   function loadQuestion() {
     console.log("載入問題...");
-    if (questions.length === 0) {
-      document.getElementById("question").innerText = "無問題可顯示";
+    let questionElement = document.getElementById("question");
+
+    if (!questionElement) {
+      console.error("⚠️ 錯誤：找不到 #question，請檢查 HTML 結構！");
       return;
     }
-    document.getElementById("question").innerText = questions[currentQuestionIndex];
+
+    if (questions.length === 0) {
+      questionElement.innerText = "無問題可顯示";
+      return;
+    }
+
+    questionElement.innerText = questions[currentQuestionIndex];
     listenVotes();
     listenComments();
   }
