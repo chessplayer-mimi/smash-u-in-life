@@ -9,7 +9,7 @@
     "start": "vite preview"
   },
   "dependencies": {
-    "firebase": "^9.6.0"
+    "firebase": "^9.23.0"
   },
   "devDependencies": {
     "dotenv": "^16.0.3",

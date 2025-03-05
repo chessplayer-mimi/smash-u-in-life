@@ -1,62 +1,21 @@
-<!DOCTYPE html>
-<html lang="zh">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>你破防了嗎</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      text-align: center;
-      background-color: #f4f4f4;
-      margin: 0;
-      padding: 20px;
-    }
-    .container {
-      max-width: 600px;
-      background: white;
-      padding: 20px;
-      border-radius: 10px;
-      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-      margin: auto;
-    }
-  </style>
-</head>
-<body>
-  <div class="container">
-    <div class="question" id="question">載入中...</div>
-    <button class="btn btn-yes" onclick="handleYes()">是</button>
-    <button class="btn btn-no" onclick="nextQuestion()">否</button>
-    <p class="vote-count">按「是」的人數: <span id="yesCount">0</span></p>
-    <div class="comments">
-      <h3>留言區</h3>
-      <div id="commentList"></div>
-      <input type="text" id="commentInput" placeholder="輸入留言..." onkeypress="handleEnter(event)">
-      <button onclick="addComment()">送出</button>
-    </div>
-    <p class="score">破防次數: <span id="score">0</span></p>
-  </div>
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-app.js";
+  import { getDatabase, ref, onValue, push, runTransaction } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-database.js";
 
-  <!-- Firebase SDK -->
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-app.js";
-    import { getDatabase, ref, onValue, push, runTransaction } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-database.js";
+  const firebaseConfig = {
+    apiKey: "AIzaSyDFwkjeLA8VjI1MFflpECFNz-hV6S8ZyPw",
+    authDomain: "smash-u-in-life.firebaseapp.com",
+    databaseURL: "https://smash-u-in-life-default-rtdb.firebaseio.com", // 更新正確的 URL
+    projectId: "smash-u-in-life",
+    storageBucket: "smash-u-in-life.appspot.com",
+    messagingSenderId: "601839091807",
+    appId: "1:601839091807:web:e735bb69cfa15ba3369bea"
+  };
 
-    const firebaseConfig = {
-      apiKey: "你的API_KEY",
-      authDomain: "smash-u-in-life.firebaseapp.com",
-      databaseURL: "https://smash-u-in-life-default-rtdb.asia-southeast1.firebasedatabase.app",
-      projectId: "smash-u-in-life",
-      storageBucket: "smash-u-in-life.appspot.com",
-      messagingSenderId: "601839091807",
-      appId: "1:601839091807:web:e735bb69cfa15ba3369bea"
-    };
+  const app = initializeApp(firebaseConfig);
+  const database = getDatabase(app);
 
-    const app = initializeApp(firebaseConfig);
-    const database = getDatabase(app);
-
-    // 顯示問題
-    const questions = [    "工作找沒找到？還是繼續啃老？",
+  const questions = [ "工作找沒找到？還是繼續啃老？",
 "工資有夠少？這點錢連外送都不敢點吧？",
 "房子買了沒？還是在幫房東還貸？",
 "房貸繳了沒？還是下個月準備被銀行追殺？",
@@ -116,70 +75,73 @@
 "喝水夠不夠？還是每天靠咖啡續命？",
 "這輩子有沒有後悔的事？還是來不及後悔？",
 "你還好嗎？還是只能說「還行」？"];
-    let currentQuestionIndex = 0;
-    let score = 0;
+  let currentQuestionIndex = 0;
+  let score = 0;
 
-    function loadQuestion() {
-      document.getElementById("question").innerText = questions[currentQuestionIndex];
-      listenVotes();
-      listenComments();
-    }
+  function loadQuestion() {
+    document.getElementById("question").innerText = questions[currentQuestionIndex];
+    listenVotes();
+    listenComments();
+  }
 
-    function listenVotes() {
-      const voteRef = ref(database, 'votes/' + currentQuestionIndex);
-      onValue(voteRef, snapshot => {
-        document.getElementById("yesCount").innerText = snapshot.val() || 0;
+  function listenVotes() {
+    const voteRef = ref(database, 'votes/' + currentQuestionIndex);
+    onValue(voteRef, snapshot => {
+      document.getElementById("yesCount").innerText = snapshot.val() || 0;
+    });
+  }
+
+  function listenComments() {
+    const commentRef = ref(database, 'comments/' + currentQuestionIndex);
+    onValue(commentRef, snapshot => {
+      const commentList = document.getElementById("commentList");
+      commentList.innerHTML = "";
+      snapshot.forEach(childSnapshot => {
+        let commentDiv = document.createElement("div");
+        commentDiv.className = "comment";
+        commentDiv.innerText = childSnapshot.val();
+        commentList.appendChild(commentDiv);
       });
-    }
+    });
+  }
 
-    function listenComments() {
-      const commentRef = ref(database, 'comments/' + currentQuestionIndex);
-      onValue(commentRef, snapshot => {
-        const commentList = document.getElementById("commentList");
-        commentList.innerHTML = "";
-        snapshot.forEach(childSnapshot => {
-          let commentDiv = document.createElement("div");
-          commentDiv.className = "comment";
-          commentDiv.innerText = childSnapshot.val();
-          commentList.appendChild(commentDiv);
-        });
-      });
-    }
+  function handleYes() {
+    score++;
+    document.getElementById("score").innerText = score;
+    runTransaction(ref(database, 'votes/' + currentQuestionIndex), count => (count || 0) + 1);
+    nextQuestion();
+  }
 
-    function handleYes() {
-      score++;
+  function nextQuestion() {
+    currentQuestionIndex++;
+    if (currentQuestionIndex >= questions.length) {
+      alert("遊戲結束！你的破防次數: " + score);
+      currentQuestionIndex = 0;
+      score = 0;
       document.getElementById("score").innerText = score;
-      runTransaction(ref(database, 'votes/' + currentQuestionIndex), count => (count || 0) + 1);
-      nextQuestion();
     }
+    loadQuestion();
+  }
 
-    function nextQuestion() {
-      currentQuestionIndex++;
-      if (currentQuestionIndex >= questions.length) {
-        alert("遊戲結束！你的破防次數: " + score);
-        currentQuestionIndex = 0;
-        score = 0;
-        document.getElementById("score").innerText = score;
-      }
-      loadQuestion();
+  function addComment() {
+    let commentInput = document.getElementById("commentInput");
+    let commentText = commentInput.value.trim();
+    if (commentText) {
+      push(ref(database, 'comments/' + currentQuestionIndex), commentText);
+      commentInput.value = "";
     }
+  }
 
-    function addComment() {
-      let commentInput = document.getElementById("commentInput");
-      let commentText = commentInput.value.trim();
-      if (commentText) {
-        push(ref(database, 'comments/' + currentQuestionIndex), commentText);
-        commentInput.value = "";
-      }
+  function handleEnter(event) {
+    if (event.key === "Enter") {
+      addComment();
     }
+  }
 
-    function handleEnter(event) {
-      if (event.key === "Enter") {
-        addComment();
-      }
-    }
+  // ✅ 讓 HTML 可以存取這些函數
+  window.handleYes = handleYes;
+  window.nextQuestion = nextQuestion;
+  window.addComment = addComment;
 
-    window.onload = loadQuestion;
-  </script>
-</body>
-</html>
+  window.onload = loadQuestion;
+</script>
