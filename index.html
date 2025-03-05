@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>你破防了嗎生活版</title>
+  <title>你破防了嗎</title>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -20,52 +20,6 @@
       box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
       margin: auto;
     }
-    .question {
-      font-size: 20px;
-      margin-bottom: 20px;
-      min-height: 50px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-    .btn {
-      padding: 10px 20px;
-      font-size: 18px;
-      margin: 10px;
-      cursor: pointer;
-      border: none;
-      border-radius: 5px;
-    }
-    .btn-yes {
-      background-color: red;
-      color: white;
-    }
-    .btn-no {
-      background-color: green;
-      color: white;
-    }
-    .vote-count, .score {
-      font-size: 16px;
-      margin-top: 10px;
-    }
-    .comments {
-      margin-top: 20px;
-      text-align: left;
-    }
-    .comment {
-      background: #eee;
-      padding: 10px;
-      margin: 5px 0;
-      border-radius: 5px;
-    }
-    input {
-      width: calc(100% - 22px);
-      padding: 8px;
-      margin-top: 10px;
-    }
-    button {
-      margin-top: 5px;
-    }
   </style>
 </head>
 <body>
@@ -77,7 +31,7 @@
     <div class="comments">
       <h3>留言區</h3>
       <div id="commentList"></div>
-      <input type="text" id="commentInput" placeholder="輸入留言...">
+      <input type="text" id="commentInput" placeholder="輸入留言..." onkeypress="handleEnter(event)">
       <button onclick="addComment()">送出</button>
     </div>
     <p class="score">破防次數: <span id="score">0</span></p>
@@ -85,15 +39,24 @@
 
   <!-- Firebase SDK -->
   <script type="module">
-    import { firebaseConfig } from './config.js';
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.0/firebase-app.js";
-    import { getDatabase, ref, onValue, set, push, runTransaction } from "https://www.gstatic.com/firebasejs/9.6.0/firebase-database.js";
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-app.js";
+    import { getDatabase, ref, onValue, push, runTransaction } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-database.js";
+
+    const firebaseConfig = {
+      apiKey: "你的API_KEY",
+      authDomain: "smash-u-in-life.firebaseapp.com",
+      databaseURL: "https://smash-u-in-life-default-rtdb.asia-southeast1.firebasedatabase.app",
+      projectId: "smash-u-in-life",
+      storageBucket: "smash-u-in-life.appspot.com",
+      messagingSenderId: "601839091807",
+      appId: "1:601839091807:web:e735bb69cfa15ba3369bea"
+    };
 
     const app = initializeApp(firebaseConfig);
     const database = getDatabase(app);
 
-    const questions = [
-      "工作找沒找到？還是繼續啃老？",
+    // 顯示問題
+    const questions = [    "工作找沒找到？還是繼續啃老？",
 "工資有夠少？這點錢連外送都不敢點吧？",
 "房子買了沒？還是在幫房東還貸？",
 "房貸繳了沒？還是下個月準備被銀行追殺？",
@@ -152,11 +115,15 @@
 "有人約你看電影嗎？還是電影只能自己看？",
 "喝水夠不夠？還是每天靠咖啡續命？",
 "這輩子有沒有後悔的事？還是來不及後悔？",
-"你還好嗎？還是只能說「還行」？"
-    ];
-
+"你還好嗎？還是只能說「還行」？"];
     let currentQuestionIndex = 0;
     let score = 0;
+
+    function loadQuestion() {
+      document.getElementById("question").innerText = questions[currentQuestionIndex];
+      listenVotes();
+      listenComments();
+    }
 
     function listenVotes() {
       const voteRef = ref(database, 'votes/' + currentQuestionIndex);
@@ -179,17 +146,10 @@
       });
     }
 
-    function loadQuestion() {
-      document.getElementById("question").innerText = questions[currentQuestionIndex];
-      listenVotes();
-      listenComments();
-    }
-
     function handleYes() {
       score++;
       document.getElementById("score").innerText = score;
-      const voteRef = ref(database, 'votes/' + currentQuestionIndex);
-      runTransaction(voteRef, count => (count || 0) + 1);
+      runTransaction(ref(database, 'votes/' + currentQuestionIndex), count => (count || 0) + 1);
       nextQuestion();
     }
 
@@ -208,9 +168,14 @@
       let commentInput = document.getElementById("commentInput");
       let commentText = commentInput.value.trim();
       if (commentText) {
-        const commentRef = ref(database, 'comments/' + currentQuestionIndex);
-        push(commentRef, commentText);
+        push(ref(database, 'comments/' + currentQuestionIndex), commentText);
         commentInput.value = "";
+      }
+    }
+
+    function handleEnter(event) {
+      if (event.key === "Enter") {
+        addComment();
       }
     }
 
